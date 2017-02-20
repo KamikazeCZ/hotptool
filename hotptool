@@ -1,0 +1,51 @@
+#!/usr/bin/env sh
+
+DIR=$HOME/.hotptool
+
+mkdir -p $DIR
+
+[ -f $DIR/counter ] || echo 0 >> $DIR/counter
+
+function genpass {
+	COUNTER=$(cat $DIR/counter)
+	COUNTER_NEW=$((COUNTER+1))
+	echo $COUNTER_NEW > $DIR/counter
+	KEY=$(cat $DIR/key)
+	[ -z "$KEY" ] && echo No key set. For help, run the tool without arguments. && exit 1
+	oathtool -b $KEY -c $COUNTER
+}
+
+function importkey {
+	echo $1 > $DIR/key
+	echo 0 > $DIR/counter
+}
+
+case $1 in
+genpass)
+	genpass
+;;
+importkey)
+	[ -z "$2" ] && echo Warning: Key empty && exit 1
+	importkey $2
+;;
+*)
+	echo -e "Disclaimer:"
+	echo -e "You should never use this tool. It took me about five minutes to create and it does have flaws."
+	echo -e "Also, it is very likely you are bypassing some security measurements by using this tool instead of some hardware token or a mobile phone application."
+	echo -e ""
+	echo -e "Author: Lukas Hellebrandt <lukas.hellebrandt@gmail.com>"
+	echo -e ""
+	echo -e ""
+	echo -e ""
+	echo -e "This is a super simple tool to generate your HOTP passwords."
+	echo -e ""
+	echo -e "To use it, you just import a HOTP key in base32 encoding (you can only have one key imported at a time):"
+	echo -e "\t# hotptool importkey JBSWY3DPEHPK3PXP"
+	echo -e "Then you generate your first password:"
+	echo -e "\t# hotptool genpass"
+	echo -e "\t282760"
+	echo -e "Then another...:"
+	echo -e "\t# hotptool genpass"
+	echo -e "\t996554"
+;;
+esac
